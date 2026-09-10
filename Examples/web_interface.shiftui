@@ -1,0 +1,11 @@
+create.var {
+    .name(main_button)
+    .type(button)
+    .value = "Submit Transaction"
+    .immutable;
+
+    .name(app_title)
+    .type(header)
+    .value = "Shift Banking Platform"
+    .immutable:
+}
