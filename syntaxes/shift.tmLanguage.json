@@ -1,18 +1,37 @@
 {
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Shift",
   "scopeName": "source.shift",
   "patterns": [
     {
-      "match": "\\b(create\\.var|create\\.asm)\\b",
-      "name": "keyword.control.shift"
+      "comment": "Declaration keywords mapped to Swift keyword scope",
+      "name": "keyword.other.declaration.swift",
+      "match": "\\b(var|let|func|asm)\\b"
     },
     {
-      "match": "\\.([a-zA-Z_][a-zA-Z0-9_]*)",
-      "name": "entity.other.attribute-name.shift"
+      "comment": "Attributes mapped to Swift tag/attribute scope",
+      "name": "entity.name.tag.swift",
+      "match": "@[a-zA-Z_][a-zA-Z0-9_]*"
     },
     {
-      "match": ";|:",
-      "name": "punctuation.terminator.shift"
+      "comment": "Standard types mapped to Swift type scope",
+      "name": "support.type.swift",
+      "match": "\\b(UInt32|UInt64|Int32|Int64|String|Bool)\\b"
+    },
+    {
+      "comment": "Storage modifiers mapped to Swift modifier scope",
+      "name": "storage.modifier.swift",
+      "match": "\\b(mutating|volatile|static|private)\\b"
+    },
+    {
+      "comment": "Hexadecimal numbers",
+      "name": "constant.numeric.integer.hexadecimal.swift",
+      "match": "\\b0x[0-9a-fA-F]+\\b"
+    },
+    {
+      "comment": "Decimal numbers",
+      "name": "constant.numeric.integer.swift",
+      "match": "\\b[0-9]+\\b"
     }
   ]
 }
