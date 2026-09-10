@@ -1,20 +1,24 @@
-var {
-    @name(status_led)
-    @type(UInt32)
+@propertyWrapper
+struct StatusLed {
+    @name("status_led")
+    @type(UInt32.self)
     @address(0x40001000)
-    volatile
-    mutating
+    var volatile: Bool = true
+    var mutating: Bool = true
+}
 
-    @name(loop_count)
-    @type(UInt32)
+@propertyWrapper
+struct LoopCount {
+    @name("loop_count")
+    @type(UInt32.self)
     @value(0)
-    mutating
+    var mutating: Bool = true
 }
 
 status_led = status_led | 1
 loop_count = loop_count + 1
 
-asm {
-    @target(arm64)
+func asm() {
+    @target("arm64")
     @instruction("isb")
 }
