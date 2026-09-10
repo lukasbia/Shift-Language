@@ -1,5 +1,2 @@
-*.shift linguist-language=Shift
-*.shiftui linguist-language=ShiftUI
-
-*.shift text
-*.shiftui text
+*.shift linguist-language=Swift
+*.shiftui linguist-language=Swift
