@@ -3,31 +3,33 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
-#include <regex>
 
-struct SourceLocation {
-    size_t line;
-    size_t column;
+enum class TokenType {
+    TOKEN_EOF,
+    TOKEN_IDENTIFIER,
+    TOKEN_NUMBER,
+    TOKEN_KEYWORD,
+    TOKEN_ATTRIBUTE, // Handles hardware qualifiers like .volatile
+    TOKEN_SYMBOL,    // Handles =, :, +, -, etc.
+    TOKEN_UNKNOWN
 };
 
 struct Token {
-    std::string type;
-    std::string value;
-    SourceLocation loc;
+    TokenType type;
+    std::string text;
 };
 
 class Lexer {
-private:
-    std::string code;
-    size_t pos = 0;
-    size_t line = 1;
-    size_t col = 1;
-    std::stack<int> indentStack;
-
 public:
-    Lexer(const std::string& sourceCode);
+    Lexer(const std::string& src);
     std::vector<Token> tokenize();
+
+private:
+    std::string src;
+    size_t pos;
+    char peek();
+    char advance();
+    bool isAtEnd();
 };
 
 #endif
