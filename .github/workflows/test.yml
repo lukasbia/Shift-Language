@@ -1,0 +1,21 @@
+name: Shift Compiler CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Test Compiler Output
+      run: |
+        python -m compiler.shiftc examples/hardware_control.shift
+        python -m compiler.shiftc examples/web_interface.shiftui
