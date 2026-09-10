@@ -1,20 +1,20 @@
-create.var {
-    .name(status_led)
-    .type(u32)
-    .address(0x40001000)
-    .volatile;
-    .mutable;
+var {
+    @name(status_led)
+    @type(UInt32)
+    @address(0x40001000)
+    volatile
+    mutating
 
-    .name(loop_count)
-    .type(u32)
-    .value = 0
-    .mutable:
+    @name(loop_count)
+    @type(UInt32)
+    @value(0)
+    mutating
 }
 
 status_led = status_led | 1
 loop_count = loop_count + 1
 
-create.asm {
-    .target(arm64)
-    .instruction("isb");
+asm {
+    @target(arm64)
+    @instruction("isb")
 }
