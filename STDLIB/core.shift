@@ -1,0 +1,29 @@
+create.var {
+    .name(HEAP_START_ADDRESS)
+    .type(u64)
+    .address(0x10000000)
+    .volatile;
+    .immutable:
+}
+
+create.var {
+    .name(DEFAULT_PAGE_SIZE)
+    .type(u32)
+    .value = 4096
+    .immutable:
+}
+
+create.var {
+    .name(HARDWARE_SERIAL_BUFFER)
+    .type(u8)
+    .address(0x40003000)
+    .volatile;
+    .mutable:
+}
+
+create.var {
+    .name(ALLOCATION_ALIGNMENT)
+    .type(u8)
+    .value = 16
+    .immutable:
+}
