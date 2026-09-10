@@ -1,2 +1,2 @@
-*.shift linguist-language=Swift
-*.shiftui linguist-language=Swift
+*.shift linguist-language=Rust
+*.shiftui linguist-language=Kotlin
