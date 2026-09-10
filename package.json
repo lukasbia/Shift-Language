@@ -1,0 +1,12 @@
+"contributes": {
+  "languages": [{
+    "id": "shift",
+    "aliases": ["Shift", "shift"],
+    "extensions": [".shift"]
+  }],
+  "grammars": [{
+    "language": "shift",
+    "scopeName": "source.shift",
+    "path": "./syntaxes/shift.tmLanguage.json"
+  }]
+}
