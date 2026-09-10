@@ -1,127 +1,82 @@
 #include "lexer.hpp"
-#include <stdexcept>
+#include <cctype>
 
-const std::unordered_set<std::string> KEYWORDS = {
-    "var", "let", "func", "asm", "type", "enum",
-    "mutating", "volatile", "static", "private", "public", "const", "atomic", "extern",
-    "if", "else", "switch", "case", "for", "while", "return", "break", "continue",
-    "align", "cast", "sizeOf", "defer", "unsafe",
-    "true", "false", "nil", "import", "ui", "struct", "async", "await", "guard"
-};
+Lexer::Lexer(const std::string& source) : src(source), pos(0) {}
 
-struct TokenRule {
-    std::string type;
-    std::regex pattern;
-};
+char Lexer::peek() {
+    if (isAtEnd()) return '\0';
+    return src[pos];
+}
 
-Lexer::Lexer(const std::string& sourceCode) : code(sourceCode) {
-    indentStack.push(0);
+char Lexer::advance() {
+    if (isAtEnd()) return '\0';
+    return src[pos++];
+}
+
+bool Lexer::isAtEnd() {
+    return pos >= src.length();
 }
 
 std::vector<Token> Lexer::tokenize() {
     std::vector<Token> tokens;
     
-    const std::vector<TokenRule> TOKEN_TYPES = {
-        {"singleLineComment", std::regex(R"(//.*)")},
-        {"multiLineComment", std::regex(R"(/\*[\s\S]*?\*/)")},
-        {"attribute", std::regex(R"(\.[a-zA-Z_][a-zA-Z0-9_]*)")},
-        {"identifier", std::regex(R"([a-zA-Z_][a-zA-Z0-9_]*)")},
-        {"hexLiteral", std::regex(R"(0x[0-9a-fA-F]+)")},
-        {"numberLiteral", std::regex(R"(\d+(\.\d+)?)")},
-        {"stringLiteral", std::regex(R"("[^"]*")")},
-        {"equalOp", std::regex(R"(==)")},
-        {"notEqualOp", std::regex(R"(!=)")},
-        {"lessThanOrEqualOp", std::regex(R"(<=)")},
-        {"greaterThanOrEqualOp", std::regex(R"(>=)")},
-        {"logicalAndOp", std::regex(R"(&&)")},
-        {"logicalOrOp", std::regex(R"(\|\|)")},
-        {"assignOp", std::regex(R"(=)")},
-        {"addOp", std::regex(R"(\+)")},
-        {"subOp", std::regex(R"(-)")},
-        {"mulOp", std::regex(R"(\*)")},
-        {"divOp", std::regex(R"(/)")},
-        {"bitwiseAndOp", std::regex(R"(&)")},
-        {"bitwiseOrOp", std::regex(R"(\|)")},
-        {"bitwiseXorOp", std::regex(R"(\^))")},
-        {"semicolon", std::regex(R"(;)")},
-        {"colon", std::regex(R"(:)")},
-        {"comma", std::regex(R"(,)")},
-        {"leftParen", std::regex(R"(\()")},
-        {"rightParen", std::regex(R"(\))")}
-    };
+    while (!isAtEnd()) {
+        char c = peek();
 
-    size_t length = code.length();
+        // Skip whitespace
+        if (std::isspace(c)) {
+            advance();
+            continue;
+        }
 
-    while (pos < length) {
-        if (code[pos] == '\n' || code[pos] == '\r') {
-            bool isCrLf = (code[pos] == '\r' && pos + 1 < length && code[pos + 1] == '\n');
-            pos += isCrLf ? 2 : 1;
-            line++;
-            col = 1;
+        // Parse hardware-specific attributes (e.g. .volatile, .address)
+        if (c == '.') {
+            advance();
+            std::string attr = ".";
+            while (std::isalnum(peek()) || peek() == '_') {
+                attr += advance();
+            }
+            tokens.push_back({TokenType::TOKEN_ATTRIBUTE, attr});
+            continue;
+        }
+
+        // Parse Identifiers and Keywords
+        if (std::isalpha(c) || c == '_') {
+            std::string ident = "";
+            while (std::isalnum(peek()) || peek() == '_') {
+                ident += advance();
+            }
             
-            tokens.push_back({"newline", "\n", {line, col}});
-
-            int indentLength = 0;
-            while (pos < length && (code[pos] == ' ' || code[pos] == '\t')) {
-                indentLength += (code[pos] == '\t') ? 4 : 1;
-                pos++;
-                col++;
+            TokenType type = TokenType::TOKEN_IDENTIFIER;
+            if (ident == "var" || ident == "let" || ident == "func" || ident == "if" || ident == "while") {
+                type = TokenType::TOKEN_KEYWORD;
             }
-
-            if (pos < length && code[pos] != '\n' && code[pos] != '\r' && code[pos] != '/') {
-                if (indentLength > indentStack.top()) {
-                    indentStack.push(indentLength);
-                    tokens.push_back({"indent", "INDENT", {line, col}});
-                } else {
-                    while (indentLength < indentStack.top()) {
-                        indentStack.pop();
-                        tokens.push_back({"dedent", "DEDENT", {line, col}});
-                    }
-                }
-            }
+            
+            tokens.push_back({type, ident});
             continue;
         }
 
-        if (code[pos] == ' ' || code[pos] == '\t') {
-            pos++;
-            col++;
+        // Parse Numeric Literals (Decimals and Hexadecimals)
+        if (std::isdigit(c)) {
+            std::string num = "";
+            while (std::isalnum(peek()) || peek() == '.') { // handles 0x hex values too
+                num += advance();
+            }
+            tokens.push_back({TokenType::TOKEN_NUMBER, num});
             continue;
         }
 
-        bool matched = false;
-        SourceLocation currentLoc = {line, col};
-
-        for (const auto& rule : TOKEN_TYPES) {
-            std::smatch match;
-            if (std::regex_search(code.cbegin() + pos, code.cend(), match, rule.pattern, std::regex_constants::match_continuous)) {
-                std::string text = match.str(0);
-
-                if (rule.type != "singleLineComment" && rule.type != "multiLineComment") {
-                    if (rule.type == "identifier" && KEYWORDS.find(text) != KEYWORDS.end()) {
-                        tokens.push_back({"keyword", text, currentLoc});
-                    } else {
-                        tokens.push_back({rule.type, text, currentLoc});
-                    }
-                }
-
-                pos += text.length();
-                col += text.length();
-                matched = true;
-                break;
-            }
+        // Parse Symbols
+        if (c == '=' || c == ':' || c == '+' || c == '-' || c == '(' || c == ')' || c == '{' || c == '}') {
+            std::string sym(1, advance());
+            tokens.push_back({TokenType::TOKEN_SYMBOL, sym});
+            continue;
         }
 
-        if (!matched) {
-            throw std::runtime_error("SyntaxError: Unexpected character '" + std::string(1, code[pos]) + 
-                                     "' at line " + std::to_string(line) + ", col " + std::to_string(col));
-        }
+        // Skip unrecognized single characters safely
+        advance();
     }
 
-    while (indentStack.size() > 1) {
-        indentStack.pop();
-        tokens.push_back({"dedent", "DEDENT", {line, col}});
-    }
-
-    tokens.push_back({"eof", "", {line, col}});
+    tokens.push_back({TokenType::TOKEN_EOF, ""});
     return tokens;
 }
