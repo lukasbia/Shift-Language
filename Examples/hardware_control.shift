@@ -1,24 +1,12 @@
-@propertyWrapper
-struct StatusLed {
-    @name("status_led")
-    @type(UInt32.self)
-    @address(0x40001000)
-    var volatile: Bool = true
-    var mutating: Bool = true
-}
+// Swift-compatible declaration style
+var statusLed: UInt32 = 0x40001000
+var loopCount: UInt32 = 0
 
-@propertyWrapper
-struct LoopCount {
-    @name("loop_count")
-    @type(UInt32.self)
-    @value(0)
-    var mutating: Bool = true
-}
+// Custom compiler directives using standard Swift attribute syntax
+@attached(peer)
+var isVolatile: Bool = true
 
-status_led = status_led | 1
-loop_count = loop_count + 1
-
-func asm() {
-    @target("arm64")
-    @instruction("isb")
+func executeHardwareControl() {
+    statusLed = statusLed | 1
+    loopCount += 1
 }
