@@ -1,11 +1,22 @@
-create.var {
-    .name(main_button)
-    .type(button)
-    .value = "Submit Transaction"
-    .immutable;
+// Hardware Register Mapping
+@propertyWrapper
+struct HardwareControl {
+    @attribute var statusLed: UInt32 = 0x40001000
+    @attribute var loopCount: UInt32 = 0
+}
 
-    .name(app_title)
-    .type(header)
-    .value = "Shift Banking Platform"
-    .immutable:
+// Logic & Hardware Mutations
+func executeControl() {
+    var statusLed = 0x40001000
+    var loopCount = 0
+
+    statusLed = statusLed | 1
+    loopCount = loopCount + 1
+}
+
+// Low-Level / Assembly Operations
+@attribute
+func executeAsm() {
+    let target = "arm64"
+    let instruction = "isb"
 }
