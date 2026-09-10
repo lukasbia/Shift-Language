@@ -6,7 +6,6 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
-// --- LLVM Code Generator ---
 class CodeGenerator {
 private:
     std::stringstream irStream;
@@ -22,7 +21,6 @@ public:
         irStreamLocal << "; ModuleID = 'ShiftModule'\n";
         irStreamLocal << "source_filename = \"main.shift\"\n\n";
 
-        // First pass: Global variables (hardware registers)
         for (const auto& stmt : program->statements) {
             if (auto varNode = dynamic_cast<VarDeclNode*>(stmt.get())) {
                 generateGlobalVar(varNode, irStreamLocal);
@@ -31,7 +29,6 @@ public:
 
         irStreamLocal << "\n";
 
-        // Second pass: Functions
         for (const auto& stmt : program->statements) {
             if (auto funcNode = dynamic_cast<FunctionNode*>(stmt.get())) {
                 generateFunction(funcNode, irStreamLocal);
@@ -78,7 +75,6 @@ private:
     }
 };
 
-// --- Main Program Entry ---
 int main() {
     std::string shiftSource = 
         ".volatile\n"
