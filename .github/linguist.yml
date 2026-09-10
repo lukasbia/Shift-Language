@@ -1,0 +1,15 @@
+Shift:
+  type: programming
+  color: "#6e42caf"
+  extensions:
+    - ".shift"
+  tm_scope: source.shift
+  ace_mode: text
+
+ShiftUI:
+  type: programming
+  color: "#ff4081"
+  extensions:
+    - ".shiftui"
+  tm_scope: source.shiftui
+  ace_mode: text
