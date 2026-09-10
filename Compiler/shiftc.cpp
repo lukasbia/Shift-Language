@@ -1,9 +1,12 @@
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 #include <memory>
 #include <sstream>
+#include "lexer.hpp"
+#include "parser.hpp"
 
+// --- LLVM Code Generator ---
 class CodeGenerator {
 private:
     std::stringstream irStream;
@@ -15,32 +18,31 @@ private:
 
 public:
     std::string generate(ProgramNode* program) {
-        // Emit standard LLVM module header
-        irStream << "; ModuleID = 'ShiftModule'\n";
-        irStream << "source_filename = \"main.shift\"\n\n";
+        std::stringstream irStreamLocal;
+        irStreamLocal << "; ModuleID = 'ShiftModule'\n";
+        irStreamLocal << "source_filename = \"main.shift\"\n\n";
 
-        // First pass: Global variables (like hardware registers)
+        // First pass: Global variables (hardware registers)
         for (const auto& stmt : program->statements) {
             if (auto varNode = dynamic_cast<VarDeclNode*>(stmt.get())) {
-                generateGlobalVar(varNode);
+                generateGlobalVar(varNode, irStreamLocal);
             }
         }
 
-        irStream << "\n";
+        irStreamLocal << "\n";
 
         // Second pass: Functions
         for (const auto& stmt : program->statements) {
             if (auto funcNode = dynamic_cast<FunctionNode*>(stmt.get())) {
-                generateFunction(funcNode);
+                generateFunction(funcNode, irStreamLocal);
             }
         }
 
-        return irStream.str();
+        return irStreamLocal.str();
     }
 
 private:
-    void generateGlobalVar(VarDeclNode* node) {
-        // Check for hardware attributes like .volatile or .address
+    void generateGlobalVar(VarDeclNode* node, std::stringstream& stream) {
         bool isVolatile = false;
         std::string addressVal = "";
 
@@ -52,39 +54,57 @@ private:
             }
         }
 
-        // Emit LLVM IR global variable syntax
-        // Example: @controlReg = volatile global i32 16384
-        irStream << "@" << node.name << " = ";
+        stream << "@" << node->name << " = ";
         if (isVolatile) {
-            irStream << "volatile ";
+            stream << "volatile ";
         }
-        
-        // If an explicit hardware address is given, map it using LLVM sections or inttoptr alignments
-        if (!addressVal.empty()) {
-            irStream << "global i32 " << node.value << ", align 4 ; address: " << addressVal << "\n";
-        } else {
-            irStream << "global i32 " << node.value << ", align 4\n";
-        }
+        stream << "global i32 " << node->value << ", align 4\n";
     }
 
-    void generateFunction(FunctionNode* node) {
-        // Emit standard LLVM IR function signature
-        // Example: define i32 @initHardware() { ... }
-        irStream << "define i32 @" << node.name << "() {\n";
-        irStream << "entry:\n";
+    void generateFunction(FunctionNode* node, std::stringstream& stream) {
+        stream << "define i32 @" << node->name << "() {\n";
+        stream << "entry:\n";
 
-        // Generate body statements inside the function block
         for (const auto& stmt : node->body) {
             if (auto varNode = dynamic_cast<VarDeclNode*>(stmt.get())) {
-                // Local variable allocation inside function (alloca)
                 std::string reg = newTemp();
-                irStream << "    " << reg << " = alloca i32, align 4\n";
-                irStream << "    store i32 " << varNode->value << ", i32* " << reg << ", align 4\n";
+                stream << "    " << reg << " = alloca i32, align 4\n";
+                stream << "    store i32 " << varNode->value << ", i32* " << reg << ", align 4\n";
             }
         }
 
-        // Default return for native functions
-        irStream << "    ret i32 0\n";
-        irStream << "}\n\n";
+        stream << "    ret i32 0\n";
+        stream << "}\n\n";
     }
 };
+
+// --- Main Program Entry ---
+int main() {
+    std::string shiftSource = 
+        ".volatile\n"
+        "var controlReg = 0x4000\n\n"
+        "func initHardware():\n"
+        "    var status = 1\n";
+
+    try {
+        std::cout << "[1/3] Lexing source code...\n";
+        Lexer lexer(shiftSource);
+        std::vector<Token> tokens = lexer.tokenize();
+
+        std::cout << "[2/3] Parsing tokens into AST...\n";
+        Parser parser(tokens);
+        auto ast = parser.parseProgram();
+
+        std::cout << "[3/3] Generating LLVM IR...\n";
+        CodeGenerator codegen;
+        std::string llvmIR = codegen.generate(ast.get());
+
+        std::cout << "\n--- Generated LLVM IR Output ---\n";
+        std::cout << llvmIR;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Compilation Error: " << e.what() << '\n';
+    }
+
+    return 0;
+}
