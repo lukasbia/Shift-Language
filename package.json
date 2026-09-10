@@ -1,12 +1,24 @@
-"contributes": {
-  "languages": [{
-    "id": "shift",
-    "aliases": ["Shift", "shift"],
-    "extensions": [".shift"]
-  }],
-  "grammars": [{
-    "language": "shift",
-    "scopeName": "source.shift",
-    "path": "./syntaxes/shift.tmLanguage.json"
-  }]
+{
+  "name": "shift-lang",
+  "displayName": "Shift Programming Language",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "shift",
+      "aliases": ["Shift", "shift"],
+      "extensions": [".shift"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "shift",
+      "scopeName": "source.shift",
+      "path": "./syntaxes/shift.tmLanguage.json"
+    }]
+  }
 }
